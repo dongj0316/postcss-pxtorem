@@ -153,7 +153,7 @@ module.exports = (options = {}) => {
   }
 
   return {
-    postcssPlugin: "postcss-pxtorem",
+    postcssPlugin: "postcss-pxtorem-vite-vue2",
     Declaration(decl) {
       const pxReplace = getPxReplace(decl.source.input);
 

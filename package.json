@@ -1,14 +1,14 @@
 {
-  "name": "postcss-pxtorem",
+  "name": "postcss-pxtorem-vite-vue2",
   "description": "A CSS post-processor that converts px to rem.",
   "version": "6.0.0",
   "author": "cuth",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git@github.com:cuth/postcss-pxtorem.git"
+    "url": "git@github.com:dongj0316/postcss-pxtorem.git"
   },
-  "bugs": "https://github.com/cuth/postcss-pxtorem/issues",
+  "bugs": "https://github.com/dongj0316/postcss-pxtorem-vite-vue2/issues",
   "main": "index.js",
   "scripts": {
     "lint": "eslint .",
