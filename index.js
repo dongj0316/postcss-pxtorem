@@ -121,42 +121,53 @@ module.exports = (options = {}) => {
   const opts = Object.assign({}, defaults, options);
   const satisfyPropList = createPropListMatcher(opts.propList);
   const exclude = opts.exclude;
-  let isExcludeFile = false;
-  let pxReplace;
-  return {
-    postcssPlugin: "postcss-pxtorem",
-    Once(css) {
-      const filePath = css.source.input.file;
-      if (
-        exclude &&
-        ((type.isFunction(exclude) && exclude(filePath)) ||
-          (type.isString(exclude) && filePath.indexOf(exclude) !== -1) ||
-          filePath.match(exclude) !== null)
-      ) {
-        isExcludeFile = true;
-      } else {
-        isExcludeFile = false;
-      }
+  const pxReplaceCache = {};
+  const getPxReplace = function (input) {
+    const filePath = input.file
+    let pxReplace = pxReplaceCache[filePath];
 
+    if (pxReplace || pxReplace === false) {
+      return pxReplace;
+    }
+
+    if (
+      exclude &&
+      ((type.isFunction(exclude) && exclude(filePath)) ||
+        (type.isString(exclude) && filePath.indexOf(exclude) !== -1) ||
+        filePath.match(exclude) !== null)
+    ) {
+      pxReplace = pxReplaceCache[filePath] = false;
+    } else {
       const rootValue =
         typeof opts.rootValue === "function"
-          ? opts.rootValue(css.source.input)
+          ? opts.rootValue(input)
           : opts.rootValue;
-      pxReplace = createPxReplace(
+      pxReplace = pxReplaceCache[filePath] = createPxReplace(
         rootValue,
         opts.unitPrecision,
         opts.minPixelValue
       );
-    },
+    }
+
+    return pxReplace;
+  }
+
+  return {
+    postcssPlugin: "postcss-pxtorem",
     Declaration(decl) {
-      if (isExcludeFile) return;
+      const pxReplace = getPxReplace(decl.source.input);
+
+      if (!pxReplace) {
+        return
+      }
 
       if (
         decl.value.indexOf("px") === -1 ||
         !satisfyPropList(decl.prop) ||
         blacklistedSelector(opts.selectorBlackList, decl.parent.selector)
-      )
+      ) {
         return;
+      }
 
       const value = decl.value.replace(pxRegex, pxReplace);
 
@@ -170,7 +181,11 @@ module.exports = (options = {}) => {
       }
     },
     AtRule(atRule) {
-      if (isExcludeFile) return;
+      const pxReplace = getPxReplace(atRule.source.input);
+
+      if (!pxReplace) {
+        return
+      }
 
       if (opts.mediaQuery && atRule.name === "media") {
         if (atRule.params.indexOf("px") === -1) return;
